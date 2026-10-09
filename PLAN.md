@@ -1,5 +1,11 @@
 # Vocal Chain Discord - Plan v2 (revidiert nach Second Opinion)
 
+## Umsetzungsstand (8. Oktober 2026)
+- Erste Tauri-Oberfläche und Offline-WAV-Harness mit HPF → De-Esser → Limiter erstellt; Live-Audio-Engine ist noch nicht implementiert.
+- Windows-Build und Tests stehen aus, weil die erste Entwicklungsumgebung Linux ohne Rust/Node/Git war und crates.io HTTP 403 lieferte. Siehe `NEXT_SESSION.md` und `WINDOWS-SETUP.md`.
+- Der Limiter ist zunächst ein DSP-Prototyp; die aktuelle 4× kubische Sample-Interpolation ist noch keine validierte True-Peak-FIR-Implementierung.
+- Dieser Status ändert den vorgesehenen Funktionsumfang und die festgelegten Entscheidungen unten nicht.
+
 ## Ziel
 Echtzeit-Stimmverarbeitung für Discord/Gaming: Mikrofon → Processing → VB-Cable → Discord. Latenz-Ziel < 20 ms Ende-zu-Ende.
 
