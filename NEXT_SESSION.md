@@ -1,24 +1,23 @@
-# Next Session — Stufe 1 starten
+# Nächste Schritte
 
-## Stand
-- Repo: https://github.com/ege16tan/vocal-chain-discord (`main`, private, 2 Commits).
-- Dateien: `PLAN.md` (v2), `AGENTS.md`. Kein Code bisher.
-- Zuerst `AGENTS.md` lesen, dann diese Datei.
+## Aktueller Stand
+- Forgejo: `http://192.168.178.31:3000/githubrocky/vocal-chain-discord` (öffentlich, Branch `main`).
+- Erster Code-Meilenstein: Tauri-Desktop-Shell und Offline-WAV-Processing mit HPF → De-Esser → Limiter, Loudness-Auswertung und DSP-Unit-Tests.
+- Der Echtzeit-Mikrofon-/VB-Cable-Engine-Pfad ist noch nicht implementiert. Das Offline-Harness ist ausdrücklich kein fertiges Discord-Mikrofon.
+- Die aktuelle Linux-Umgebung enthält kein Rust/Cargo, Node/npm oder Git; crates.io lieferte HTTP 403. Daher konnten Build, Tests und Windows-Binary hier nicht ausgeführt werden.
 
-## Ziel Stufe 1
-`harness.rs` (WAV rein → WAV raus) + HPF → De-Esser → Limiter + Loudness-Meter. Kein Tray, keine Presets, kein A/B.
+## Arbeitsauftrag für die Windows-KI
+Arbeitsreihenfolge, empfohlene Windows-Programme, Audio-Testprotokoll und konkrete Fertig-Kriterien stehen in `WINDOWS-SETUP.md`.
 
-## Konkrete Startbefehle (Windows PowerShell, aus `C:\Users\egeta\vocal-chain-discord`)
-1. `cargo install create-tauri-app --locked` (falls fehlt)
-2. Scaffold in TEMP, dann Dateien hierher mergen (nicht in existierendes Verzeichnis initen):
-   `cargo create-tauri-app --template react-ts C:\Users\egeta\AppData\Local\Temp\opencode\vc-scaffold`
-3. Deps: `cpal`, `ebur128`, `crossbeam`, `serde`, `anyhow`, `hound` (nur harness)
-4. Reihenfolge: `audio/harness.rs` → `nodes/hpf.rs` → `nodes/deesser.rs` → `nodes/limiter.rs` → `nodes/loudness.rs` → `engine.rs` → Frontend minimal.
-5. Tests: `cargo test` muss HPF-Response, DeEss-GR-Kurve, Limiter-Ceiling (-1 dBTP nie überschritten) prüfen.
+Kurzfassung:
+1. Mit den dort genannten Tools clonen, installieren, `cargo test`, `npm run build` und `npm run tauri dev` ausführen. Erst reale Buildfehler lösen; keine Effekte oder Anforderungen dazuerfinden.
+2. `Cargo.lock` und `package-lock.json` erzeugen, prüfen und committen. Danach reproduzierbar mit `cargo test --locked` und `npm ci` validieren.
+3. Offline-Harness mit mono/stereo und den dokumentierten DSP-Fällen testen. Vor Echtzeit-Integration DSP-Fehler korrigieren und Ergebnis notieren.
+4. Erst dann Engine-Grundgerüst: CPAL-Geräte anzeigen, Mic → stiller/ungefilterter VB-Cable-Output, Start/Stop, verlässliche Streamfehler und Reconnect. Noch keine UI-Preset- oder Stufe-2-Arbeit.
+5. Echtzeit-DSP erst verbinden, wenn Device-Wechsel, Puffergrenzen, Under-/Overruns und Parameterübergabe getestet sind.
+6. Mit Audacity, VB-Cable und Discord manuell testen; Messwerte und offene Fehler in `QUESTIONS.md` dokumentieren. Windows-Test mit echten Geräten kann nicht durch Linux-Builds ersetzt werden.
 
-## Fest (nicht erneut diskutieren)
-- 48 kHz fix, Buffer 128–1024 Default 256, DeEss 5–8 kHz, Limiter 4x/-1 dBTP, -16 LUFS nur Anzeige.
-- Reconnect bei Device-Wechsel ohne Crash. Param-Smoothing pro Sample.
+Änderungen in kleinen, thematischen Commits nach `main` hochladen. Vor jedem Push Secrets ausschließen; nie `--force` auf den geteilten Branch anwenden.
 
-## Fertig-Definition Stufe 1
-`cargo test` grün + `harness input.wav output.wav` klingt sauber + live Mic → VB-Cable → Discord ohne Klicks/Crash.
+## Fragen und Übergabe
+Es sind keine Nutzerentscheidungen blockierend: Sample-Rate, Buffer-Zielbereich, Effektumfang, De-Esser, Limiter und Discord-Setup sind in `PLAN.md` festgelegt. CPALs angefragte Buffergröße ist kein Versprechen über die tatsächliche Callback-Größe; reale Werte und Audiogerätefähigkeit messen und dokumentieren, statt Unterstützung vorzutäuschen. Neue, unvermeidbare Produktfragen zuerst mit Kontext/Optionen in `QUESTIONS.md` dokumentieren, dann nicht mit erfundenen Defaults in einen anderen Scope wechseln.
