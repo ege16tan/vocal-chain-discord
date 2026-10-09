@@ -4,7 +4,6 @@ use super::ChainParams;
 
 pub struct Limiter {
     delay: VecDeque<f32>,
-    delay_samples: usize,
     ceiling: f32,
     release_coeff: f32,
     gain: f32,
@@ -16,7 +15,6 @@ impl Limiter {
             (params.limiter_lookahead_ms * sample_rate as f32 / 1_000.0).round() as usize;
         Self {
             delay: std::iter::repeat(0.0).take(delay_samples).collect(),
-            delay_samples,
             ceiling: 10.0_f32.powf(params.limiter_ceiling_db / 20.0),
             release_coeff: (-1.0
                 / (params.limiter_release_ms * sample_rate as f32 / 1_000.0))
@@ -44,7 +42,7 @@ impl Limiter {
     }
 
     pub fn lookahead_samples(&self) -> usize {
-        self.delay_samples
+        self.delay.len()
     }
 }
 

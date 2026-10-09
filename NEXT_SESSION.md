@@ -1,23 +1,23 @@
 # Nächste Schritte
 
 ## Aktueller Stand
-- Forgejo: `http://192.168.178.31:3000/githubrocky/vocal-chain-discord` (öffentlich, Branch `main`).
+- GitHub: `ege16tan/vocal-chain-discord`; aktuelle Änderungen liegen auf `ege16tan-automatic-doodle`.
 - Erster Code-Meilenstein: Tauri-Desktop-Shell und Offline-WAV-Processing mit HPF → De-Esser → Limiter, Loudness-Auswertung und DSP-Unit-Tests.
-- Der Echtzeit-Mikrofon-/VB-Cable-Engine-Pfad ist noch nicht implementiert. Das Offline-Harness ist ausdrücklich kein fertiges Discord-Mikrofon.
-- Die aktuelle Linux-Umgebung enthält kein Rust/Cargo, Node/npm oder Git; crates.io lieferte HTTP 403. Daher konnten Build, Tests und Windows-Binary hier nicht ausgeführt werden.
+- Erste Live-Kette: CPAL-Gerätewahl, HPF → De-Esser → Limiter, 48 kHz, Buffer 128–1024, Reconnect-Prototyp und Peak-/Queue-Diagnose.
+- Noch offen: lock-free Parameterupdates/Smoothing, Live-LUFS/GR-Meter und Messungen mit echten Audiogeräten. Hardware-Clock-Drift und Ende-zu-Ende-Latenz sind ungeprüft.
+- `npm run build` ist erfolgreich. Rust-Tests konnten nicht starten, da `link.exe` fehlt; das installierte Build-Tools-Paket enthält noch nicht den C++-Compiler/Windows-SDK-Workload.
 
-## Arbeitsauftrag für die Windows-KI
-Arbeitsreihenfolge, empfohlene Windows-Programme, Audio-Testprotokoll und konkrete Fertig-Kriterien stehen in `WINDOWS-SETUP.md`.
+## Nächste Arbeitsschritte
+Windows-Voraussetzungen, Audio-Testprotokoll und Fertig-Kriterien stehen in `WINDOWS-SETUP.md`.
 
 Kurzfassung:
-1. Mit den dort genannten Tools clonen, installieren, `cargo test`, `npm run build` und `npm run tauri dev` ausführen. Erst reale Buildfehler lösen; keine Effekte oder Anforderungen dazuerfinden.
-2. `Cargo.lock` und `package-lock.json` erzeugen, prüfen und committen. Danach reproduzierbar mit `cargo test --locked` und `npm ci` validieren.
-3. Offline-Harness mit mono/stereo und den dokumentierten DSP-Fällen testen. Vor Echtzeit-Integration DSP-Fehler korrigieren und Ergebnis notieren.
-4. Erst dann Engine-Grundgerüst: CPAL-Geräte anzeigen, Mic → stiller/ungefilterter VB-Cable-Output, Start/Stop, verlässliche Streamfehler und Reconnect. Noch keine UI-Preset- oder Stufe-2-Arbeit.
-5. Echtzeit-DSP erst verbinden, wenn Device-Wechsel, Puffergrenzen, Under-/Overruns und Parameterübergabe getestet sind.
-6. Mit Audacity, VB-Cable und Discord manuell testen; Messwerte und offene Fehler in `QUESTIONS.md` dokumentieren. Windows-Test mit echten Geräten kann nicht durch Linux-Builds ersetzt werden.
+1. `cargo test --locked` und `cargo check` mit unterstütztem Windows-MSVC-Toolchain ausführen; der alternative GNU-Testlauf wird separat dokumentiert.
+2. CPAL-Geräteliste um unterstützte Sample-Formate, Kanäle und Buffer-Ranges ergänzen; Bufferanfrage und tatsächliche Callback-Größen ausgeben.
+3. DSP-Parameterübergabe lock-free mit sampleweisem Smoothing ermöglichen; keine Locks, Allokationen oder Tauri-IPC im Callback.
+4. LUFS- und Gain-Reduction-Meter in den Live-Pfad ergänzen.
+5. Live-Kette mit echten Geräten testen: Abziehen/Wechseln/Wiederverbinden, Queue-Under-/Overruns, hörbare Aussetzer und Ende-zu-Ende-Latenz messen.
 
-Änderungen in kleinen, thematischen Commits nach `main` hochladen. Vor jedem Push Secrets ausschließen; nie `--force` auf den geteilten Branch anwenden.
+Änderungen in kleinen, thematischen Commits auf den Arbeitsbranch pushen. Vor jedem Push Secrets ausschließen; nie `--force` anwenden.
 
 ## Fragen und Übergabe
 Es sind keine Nutzerentscheidungen blockierend: Sample-Rate, Buffer-Zielbereich, Effektumfang, De-Esser, Limiter und Discord-Setup sind in `PLAN.md` festgelegt. CPALs angefragte Buffergröße ist kein Versprechen über die tatsächliche Callback-Größe; reale Werte und Audiogerätefähigkeit messen und dokumentieren, statt Unterstützung vorzutäuschen. Neue, unvermeidbare Produktfragen zuerst mit Kontext/Optionen in `QUESTIONS.md` dokumentieren, dann nicht mit erfundenen Defaults in einen anderen Scope wechseln.

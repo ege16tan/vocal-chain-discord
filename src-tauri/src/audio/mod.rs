@@ -1,3 +1,4 @@
+pub mod engine;
 mod harness;
 pub mod nodes;
 

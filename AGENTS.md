@@ -3,9 +3,8 @@
 Arbeitsregeln und aktueller Stand für alle beitragenden Agents. Die verbindliche Projektplanung steht in `PLAN.md`.
 
 ## Stand und Repository
-- Kanonisches Repo: `http://192.168.178.31:3000/githubrocky/vocal-chain-discord` (Forgejo, öffentlich).
-- Entwicklungsordner: `/home/ege/projects/vocal-chain-discord`.
-- Zugangsdaten niemals ins Repo kopieren. Die lokale Forgejo-Notiz liegt außerhalb des Repos in `/home/ege/forgejo-login.md`.
+- Kanonisches Repo: `https://github.com/ege16tan/vocal-chain-discord` (privat).
+- Änderungen in der aktuellen Session-Worktree bearbeiten; Zugangsdaten niemals ins Repo kopieren.
 - Aktueller Implementierungsstand, fehlende Validierung und nächster Arbeitsauftrag: `NEXT_SESSION.md`.
 - Windows-spezifische Einrichtung und Prüfschritte: `WINDOWS-SETUP.md`.
 
@@ -15,11 +14,11 @@ Arbeitsregeln und aktueller Stand für alle beitragenden Agents. Die verbindlich
 - Kein Auto-Makeup und keine Cloud.
 - 48 kHz fix, Buffer 128–1024 (Default 256); De-Esser 5–8 kHz (einstellbar 3–12 kHz); Limiter True Peak 4x, Ceiling -1 dBTP; Loudness-Referenz -16 LUFS nur Anzeige.
 - Discord: Input `CABLE Output`; AGC, Krisp, Noise Suppression und Echo Cancellation aus. VB-Cable-Buffer klein halten.
-- Device-Wechsel mid-game muss künftig den Stream ohne Crash neu aufbauen.
+- Erster CPAL-Passthrough mit Gerätewahl und Reconnect-Prototyp ist vorhanden; Device-Wechsel mid-game muss noch manuell ohne Crash verifiziert werden.
 
 ## Technische Leitlinien
-- Reihenfolge: Offline-WAV-Harness und DSP-Tests → Audio-Engine mit Reconnect → DSP live integrieren → Frontend vervollständigen.
+- Implementiert sind Offline-Harness, erster 48-kHz-CPAL-Stream mit Reconnect-Prototyp, Live-DSP-Chain und Peak-/Queue-Diagnose. Noch offen: lock-free Parameterupdates mit Smoothing, Live-LUFS/GR-Meter sowie Tests mit realen Audiogeräten.
 - Parameter-Smoothing lock-free: Frontend sendet Targets, Rust smootht pro Sample gegen Klicks beim Verstellen.
 - Windows ist das Zielsystem. Linux-Builds/Tests belegen keine Windows-Audio-Kompatibilität.
-- Änderungen in kleinen, nachvollziehbaren Inkrementen nach Forgejo `main` hochladen; keine Geheimnisse oder lokalen `.env`-Dateien übertragen.
+- Änderungen in kleinen, nachvollziehbaren Inkrementen auf Feature-Branches halten; keine Geheimnisse oder lokalen `.env`-Dateien übertragen.
 - Nutzer kommuniziert Deutsch; Projektdokumentation und UI auf Deutsch.
