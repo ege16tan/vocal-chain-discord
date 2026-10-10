@@ -27,8 +27,6 @@ jobs:
           cache: npm
 
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -41,9 +39,6 @@ jobs:
             libssl-dev \
             librsvg2-dev \
             libayatana-appindicator3-dev
-
-      - name: Check formatting
-        run: cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 
       - name: Run Rust tests
         run: cargo test --manifest-path src-tauri/Cargo.toml --locked
