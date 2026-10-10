@@ -74,6 +74,10 @@ pub fn process_wav(
         !samples.is_empty() && samples.len() % input_spec.channels as usize == 0,
         "Die WAV-Datei enthält keine vollständigen Audioframes."
     );
+    anyhow::ensure!(
+        samples.iter().all(|sample| sample.is_finite()),
+        "WAV enthält NaN oder unendliche Samples."
+    );
 
     let output_spec = WavSpec {
         channels: input_spec.channels,
@@ -100,7 +104,6 @@ pub fn process_wav(
 
     for frame in samples.chunks_exact(channel_count) {
         for (channel, input) in frame.iter().copied().enumerate() {
-            anyhow::ensure!(input.is_finite(), "WAV enthält NaN oder unendliche Samples.");
             input_peak = input_peak.max(input.abs());
             let output = chains[channel].process_sample(input);
             output_peak = output_peak.max(output.abs());
@@ -132,5 +135,86 @@ fn peak_to_dbfs(peak: f32) -> Option<f64> {
         None
     } else {
         Some(20.0 * (peak as f64).log10())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        sync::atomic::{AtomicU64, Ordering},
+    };
+
+    use hound::{SampleFormat, WavSpec, WavWriter};
+
+    use super::process_wav;
+    use crate::audio::ChainParams;
+
+    static NEXT_TEST_DIR: AtomicU64 = AtomicU64::new(0);
+
+    struct TestDir(PathBuf);
+
+    impl TestDir {
+        fn new() -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "vocal-chain-harness-{}-{}",
+                std::process::id(),
+                NEXT_TEST_DIR.fetch_add(1, Ordering::Relaxed)
+            ));
+            fs::create_dir(&path).expect("test directory should be created");
+            Self(path)
+        }
+
+        fn path(&self, name: &str) -> PathBuf {
+            self.0.join(name)
+        }
+    }
+
+    impl Drop for TestDir {
+        fn drop(&mut self) {
+            fs::remove_dir_all(&self.0).expect("test directory should be removed");
+        }
+    }
+
+    fn write_nan_wav(path: &Path) {
+        let spec = WavSpec {
+            channels: 1,
+            sample_rate: 48_000,
+            bits_per_sample: 32,
+            sample_format: SampleFormat::Float,
+        };
+        let mut writer = WavWriter::create(path, spec).expect("input WAV should be created");
+        writer
+            .write_sample(0.25_f32)
+            .expect("finite sample should be written");
+        writer
+            .write_sample(f32::NAN)
+            .expect("NaN sample should be written");
+        writer.finalize().expect("input WAV should be finalized");
+    }
+
+    #[test]
+    fn invalid_samples_do_not_create_or_truncate_output() {
+        let dir = TestDir::new();
+        let input = dir.path("invalid.wav");
+        let output = dir.path("output.wav");
+        write_nan_wav(&input);
+
+        let original_output = b"existing output must remain untouched";
+        fs::write(&output, original_output).expect("existing output should be written");
+        let result = process_wav(&input, &output, ChainParams::default());
+
+        assert!(result.is_err());
+        assert_eq!(
+            fs::read(&output).expect("existing output should remain readable"),
+            original_output
+        );
+
+        let new_output = dir.path("new-output.wav");
+        let result = process_wav(&input, &new_output, ChainParams::default());
+
+        assert!(result.is_err());
+        assert!(!new_output.exists());
     }
 }
